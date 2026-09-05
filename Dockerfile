@@ -1,5 +1,5 @@
-# Base image added for Docker to work
-FROM node:20-bullseye-slim
+# Changed from bullseye-slim to bookworm-slim (Latest Debian 12)
+FROM node:20-bookworm-slim
 
 # Install Python 3, pip, ffmpeg, curl and ensure 'python' command exists
 RUN apt-get update && apt-get install -y \
