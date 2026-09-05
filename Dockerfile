@@ -1,9 +1,11 @@
-FROM node:20
+# Add Node.js Base Image (Zaroori tha)
+FROM node:20-bullseye-slim
 
-# Install Python 3, pip, ffmpeg, and ensure 'python' command exists
+# Install Python 3, pip, ffmpeg, curl (curl added for deno)
 RUN apt-get update && apt-get install -y \
     python3-pip \
     ffmpeg \
+    curl \
     python-is-python3
 
 # Install yt-dlp CLI
