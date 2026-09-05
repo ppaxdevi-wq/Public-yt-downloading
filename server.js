@@ -32,7 +32,6 @@ function buildYtDlpArgs(videoUrl, quality, audioOnly, audioQuality) {
         args.push('--cookies', COOKIES_FILE);
     }
 
-    // YouTube-specific options (only if URL is YouTube)
     if (isYouTube(videoUrl)) {
         args.push('--extractor-args', 'youtube:player_client=android,web_embedded,default');
     }
@@ -44,11 +43,9 @@ function buildYtDlpArgs(videoUrl, quality, audioOnly, audioQuality) {
         }
     } else {
         if (quality === 'best' || parseInt(quality) > 720) {
-            // High quality: merge (uses ffmpeg, writes temp file then streams)
             args.push('-f', 'bestvideo+bestaudio/best');
             args.push('--merge-output-format', 'mp4');
         } else {
-            // Low/medium quality: single file (no merge, less RAM)
             const height = quality === 'best' ? 'best' : `best[height<=${quality}]`;
             args.push('-f', `${height}[ext=mp4]/best[ext=mp4]/best`);
         }
@@ -58,7 +55,7 @@ function buildYtDlpArgs(videoUrl, quality, audioOnly, audioQuality) {
     return args;
 }
 
-// Streaming endpoint (returns media stream)
+// Streaming endpoint
 app.get(['/api/download', '/api/download-video'], (req, res) => {
     const videoUrl = req.query.url;
     const quality = req.query.quality || 'best';
@@ -67,7 +64,7 @@ app.get(['/api/download', '/api/download-video'], (req, res) => {
 
     if (!videoUrl) return res.status(400).send('URL required');
 
-    console.log(`Streaming: quality=${quality}, audio=${audioOnly}, audioQuality=${audioQuality}`);
+    console.log(`Streaming: quality=${quality}, audio=${audioOnly}`);
 
     const args = buildYtDlpArgs(videoUrl, quality, audioOnly, audioQuality);
     const ytDlp = spawn('yt-dlp', args, { stdio: ['ignore', 'pipe', 'pipe'] });
@@ -92,7 +89,6 @@ app.get(['/api/download', '/api/download-video'], (req, res) => {
     });
 
     ytDlp.on('close', (code) => {
-        console.log(`yt-dlp exited with code ${code}`);
         if (code !== 0 && !res.headersSent) {
             res.status(500).send('Download failed');
         }
@@ -106,7 +102,7 @@ app.get(['/api/download', '/api/download-video'], (req, res) => {
     });
 });
 
-// Resolve endpoint (returns a download URL for use in external download managers)
+// Resolve endpoint
 app.get('/api/resolve', (req, res) => {
     const videoUrl = req.query.url;
     const quality = req.query.quality || 'best';
@@ -133,9 +129,9 @@ app.get('/api/get-direct-link', (req, res) => {
 
     if (!videoUrl) return res.status(400).json({ error: 'URL required' });
 
-    // 🌟 MAGIC FIX: Force yt-dlp to find HTTP/HTTPS .mp4 link instead of .m3u8 stream
+    // 🌟 MAGIC FIX: Strictly FORCE exact https/http protocols. Completely blocks m3u8_native (HLS streams).
     const args = [
-        '-f', 'best[ext=mp4][protocol^=https]/best[ext=mp4][protocol^=http]/best[ext=mp4]/best', 
+        '-f', 'best[protocol=https][ext=mp4]/best[protocol=http][ext=mp4]/best[protocol=https]/best[protocol=http]', 
         '-g', 
         '--no-warnings'
     ];
