@@ -1,11 +1,12 @@
-# Changed from bullseye-slim to bookworm-slim (Latest Debian 12)
+# Base image (Latest Debian 12 - Bookworm)
 FROM node:20-bookworm-slim
 
-# Install Python 3, pip, ffmpeg, curl and ensure 'python' command exists
+# Install Python 3, pip, ffmpeg, curl, UNZIP (added here), and ensure 'python' command exists
 RUN apt-get update && apt-get install -y \
     python3-pip \
     ffmpeg \
     curl \
+    unzip \
     python-is-python3
 
 # Install yt-dlp CLI
