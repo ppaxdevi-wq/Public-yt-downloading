@@ -125,5 +125,43 @@ app.get('/api/resolve', (req, res) => {
     res.json({ downloadLink });
 });
 
+// =========================================================
+// NEW ENDPOINT: Get Direct Link (No server streaming - Safe for Render)
+// =========================================================
+app.get('/api/get-direct-link', (req, res) => {
+    const videoUrl = req.query.url;
+
+    if (!videoUrl) return res.status(400).json({ error: 'URL required' });
+
+    const args = [
+        '-f', 'best[ext=mp4]/best', 
+        '-g', 
+        '--no-warnings'
+    ];
+
+    if (fs.existsSync(COOKIES_FILE)) {
+        args.push('--cookies', COOKIES_FILE);
+    }
+    
+    args.push(videoUrl);
+
+    const ytDlp = spawn('yt-dlp', args);
+    let directUrls = '';
+
+    ytDlp.stdout.on('data', (data) => {
+        directUrls += data.toString();
+    });
+
+    ytDlp.on('close', (code) => {
+        if (code === 0 && directUrls.trim()) {
+            const url = directUrls.split('\n')[0].trim();
+            res.json({ success: true, downloadLink: url });
+        } else {
+            res.status(500).json({ error: 'Failed to extract direct link' });
+        }
+    });
+});
+// =========================================================
+
 app.use(express.static(__dirname));
 app.listen(PORT, () => console.log(`Server running on ${PORT}`));
