@@ -133,8 +133,9 @@ app.get('/api/get-direct-link', (req, res) => {
 
     if (!videoUrl) return res.status(400).json({ error: 'URL required' });
 
+    // 🌟 MAGIC FIX: Force yt-dlp to find HTTP/HTTPS .mp4 link instead of .m3u8 stream
     const args = [
-        '-f', 'best[ext=mp4]/best', 
+        '-f', 'best[ext=mp4][protocol^=https]/best[ext=mp4][protocol^=http]/best[ext=mp4]/best', 
         '-g', 
         '--no-warnings'
     ];
