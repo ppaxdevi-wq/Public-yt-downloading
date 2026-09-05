@@ -1,7 +1,7 @@
-# Add Node.js Base Image (Zaroori tha)
+# Base image added for Docker to work
 FROM node:20-bullseye-slim
 
-# Install Python 3, pip, ffmpeg, curl (curl added for deno)
+# Install Python 3, pip, ffmpeg, curl and ensure 'python' command exists
 RUN apt-get update && apt-get install -y \
     python3-pip \
     ffmpeg \
